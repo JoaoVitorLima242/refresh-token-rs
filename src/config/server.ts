@@ -1,3 +1,4 @@
+import { HttpError } from '../utils/error'
 import app from './app'
 import { config } from './vars'
 

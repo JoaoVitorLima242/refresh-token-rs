@@ -4,6 +4,7 @@ import mongoose from 'mongoose'
 
 import { IndexRoutes } from '../routes/index.routes'
 import { config } from './vars'
+import { customErrorMiddleware } from '../utils/error'
 
 class App {
   public express: express.Application
@@ -19,6 +20,7 @@ class App {
     this.express.use(express.json())
     this.express.use(cors())
     this.express.use(express.static('uploads'))
+    this.express.use(customErrorMiddleware)
   }
 
   private database() {
