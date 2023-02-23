@@ -1,2 +1,7 @@
 /node_modules
-/.yarn
+
+# Yarn Files
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+.pnp.*
