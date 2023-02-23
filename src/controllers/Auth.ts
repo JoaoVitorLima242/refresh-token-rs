@@ -4,6 +4,8 @@ import { RequestWithBody } from '../@types/express'
 import { UserModel } from '../models'
 import User, { IUser } from '../models/User'
 import { HttpError, errorHandler } from '../utils/error'
+import { createAccessToken } from '../utils/token'
+import { Request, Response } from 'express'
 
 class AuthControllers {
   public signUp = errorHandler(async (req: RequestWithBody<IUser>, res) => {
@@ -35,11 +37,22 @@ class AuthControllers {
       throw new HttpError(401, 'Wrong username or password')
 
     await this.verifyPassword(existingUser.password, password)
+    const accessToken = createAccessToken(existingUser._id)
 
     return {
-      user: existingUser
+      user: existingUser,
+      accessToken
     }
 
+  })
+
+  public privateRoute = errorHandler(async (req: Request, res: Response) => {
+    return [
+      {id: 1, name: 'node'},
+      {id: 2, name: 'JS'},
+      {id: 3, name: 'TS'},
+      {id: 4, name: 'mongo'}
+    ]
   })
 
   private async verifyPassword (hasedPassword: string, rawPassword: string) {

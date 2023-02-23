@@ -1,8 +1,8 @@
 import { rejects } from 'assert';
-import { Model, Schema, model } from 'mongoose'
+import { Document, Model, Schema, model } from 'mongoose'
 import { HttpError } from '../utils/error';
 
-export interface IUser {
+export interface IUser extends Document{
   username: string
   password: string
 }
