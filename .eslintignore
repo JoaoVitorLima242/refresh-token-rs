@@ -2,3 +2,7 @@ node_modules
 dist
 build
 /*.js
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+.pnp.*
