@@ -1,9 +1,16 @@
-import { Schema, model } from 'mongoose'
+import { rejects } from 'assert';
+import { Model, Schema, model } from 'mongoose'
+import { HttpError } from '../utils/error';
 
 export interface IUser {
   username: string
   password: string
 }
+
+interface UserModel extends Model<IUser> {
+  findByUsername(username: string): Promise<IUser> | null;
+}
+
 
 const userSchema = new Schema<IUser>(
   {
@@ -15,4 +22,13 @@ const userSchema = new Schema<IUser>(
   },
 )
 
-export default model<IUser>('User', userSchema)
+userSchema.statics.findByUsername = function (username) {
+  return this.findOne({username: username })
+}
+
+
+
+
+
+
+export default model<IUser, UserModel>('User', userSchema)

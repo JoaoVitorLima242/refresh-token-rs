@@ -27,7 +27,7 @@ export const customErrorMiddleware = (
   _next: NextFunction,
 ) => {
   console.log(error)
-  res.status(error.statusCode || 500).send({ error: error.message })
+  res.status(error.statusCode || 500).send({ error: 'Something is wrong!' })
 }
 
 export class HttpError extends Error {
