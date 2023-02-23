@@ -10,7 +10,6 @@ class AuthControllers {
     const { username, password } = req.body
 
     const existingUser = await UserModel.findByUsername(username)
-    console.log(existingUser)
 
     if (existingUser)
       throw new HttpError(401, 'This username is already registered')
@@ -26,6 +25,30 @@ class AuthControllers {
       user: userInstance
     }
   })
+
+  public login = errorHandler(async (req: RequestWithBody<IUser>, res) => {
+    const { username, password } = req.body
+
+    const existingUser = await UserModel.findByUsername(username)
+
+    if (!existingUser)
+      throw new HttpError(401, 'Wrong username or password')
+
+    await this.verifyPassword(existingUser.password, password)
+
+    return {
+      user: existingUser
+    }
+
+  })
+
+  private async verifyPassword (hasedPassword: string, rawPassword: string) {
+    const passwordMatched = await argon2.verify(hasedPassword, rawPassword)
+
+    if (!passwordMatched) {
+      throw new HttpError(401, 'Wrong username or password')
+    }
+  }
 }
 
 export default new AuthControllers()
