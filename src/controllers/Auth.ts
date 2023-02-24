@@ -1,11 +1,12 @@
 import argon2 from 'argon2'
+import dayjs from 'dayjs'
 
 import { RequestWithBody } from '../@types/express'
-import { UserModel } from '../models'
-import User, { IUser } from '../models/User'
+import { UserModel, RefreshTokenModel} from '../models'
+import { IUser } from '../models/User'
 import { HttpError, errorHandler } from '../utils/error'
 import { createAccessToken } from '../utils/token'
-import { Request, Response } from 'express'
+import { withTransactions } from '../utils/transactions'
 
 class AuthControllers {
   public signUp = errorHandler(async (req: RequestWithBody<IUser>, res) => {
@@ -28,7 +29,7 @@ class AuthControllers {
     }
   })
 
-  public login = errorHandler(async (req: RequestWithBody<IUser>, res) => {
+  public login = errorHandler( withTransactions(async (req: RequestWithBody<IUser>, _res, session) => {
     const { username, password } = req.body
 
     const existingUser = await UserModel.findByUsername(username)
@@ -39,20 +40,46 @@ class AuthControllers {
     await this.verifyPassword(existingUser.password, password)
     const accessToken = createAccessToken(existingUser._id)
 
+    await RefreshTokenModel.findOneAndDelete(
+      {
+        user: existingUser._id
+      },
+      { session }
+    )
+
+    const expiresIn = dayjs().add(15, 'days').unix()
+
+    const refreshTokenInstance = new RefreshTokenModel({
+      user: existingUser._id,
+      expiresIn,
+    })
+
+    await refreshTokenInstance.save({ session })
+
     return {
       user: existingUser,
-      accessToken
+      accessToken,
+      refreshToken: refreshTokenInstance
     }
 
-  })
+  }))
 
-  public privateRoute = errorHandler(async (req: Request, res: Response) => {
+  public privateRoute = errorHandler(async (_req, _res) => {
     return [
       {id: 1, name: 'node'},
       {id: 2, name: 'JS'},
       {id: 3, name: 'TS'},
       {id: 4, name: 'mongo'}
     ]
+  })
+
+  public generateRefreshToken = errorHandler(async (req, res) => {
+    const expiresIn = dayjs().add(15, 'days').unix()
+
+    const refreshTokenInstance = new RefreshTokenModel({
+      userId: 1,
+      expiresIn,
+    })
   })
 
   private async verifyPassword (hasedPassword: string, rawPassword: string) {

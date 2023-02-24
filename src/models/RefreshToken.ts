@@ -1,7 +1,8 @@
 import { Document, Schema, model } from 'mongoose'
 
 interface IRefreshToken extends Document{
-  owner: string
+  user: string
+  expiresIn: number
 }
 
 const refreshTokenSchema = new Schema<IRefreshToken>(
