@@ -81,14 +81,24 @@ class AuthControllers {
 
     if(!refreshTokenInstance) throw new HttpError(401, 'Refresh token invalid')
 
+    const accessToken = createAccessToken(refreshTokenInstance.user)
+
     const refreshTokenExpired = dayjs().isAfter(dayjs.unix(refreshTokenInstance.expiresIn))
 
     if (refreshTokenExpired) {
       await RefreshTokenModel.findByIdAndDelete(refreshTokenInstance._id)
-      throw new HttpError(401, 'Refresh token invalid')
+      const expiresIn = dayjs().add(15, 'days').unix()
+      const newRefreshTokenInstance = new RefreshTokenModel({
+        expiresIn,
+        user: refreshTokenInstance.user
+      })
+
+      return {
+        refreshToken: newRefreshTokenInstance,
+        accessToken
+      }
     }
 
-    const accessToken = createAccessToken(refreshTokenInstance.user)
 
     return {
       accessToken
