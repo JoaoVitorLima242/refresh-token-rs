@@ -10,7 +10,7 @@ export type AccessTokenObj = {
 export const createAccessToken = (userId: string) => {
   return jwt.sign(
     {
-      id: userId
+      userId
     },
     config.JWT_ACCESS_SECRET,
     {

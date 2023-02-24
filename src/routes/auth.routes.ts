@@ -7,6 +7,7 @@ const routes = Router()
 
 routes.post('/signup', AuthControllers.signUp)
 routes.post('/login', AuthControllers.login)
+routes.post('/refresh-token', AuthControllers.generateAccessToken)
 routes.post('/private-route', verifyAccessToken, AuthControllers.privateRoute)
 
 export default routes

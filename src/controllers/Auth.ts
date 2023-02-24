@@ -7,6 +7,7 @@ import { IUser } from '../models/User'
 import { HttpError, errorHandler } from '../utils/error'
 import { createAccessToken } from '../utils/token'
 import { withTransactions } from '../utils/transactions'
+import { Request } from 'express'
 
 class AuthControllers {
   public signUp = errorHandler(async (req: RequestWithBody<IUser>, res) => {
@@ -64,22 +65,35 @@ class AuthControllers {
 
   }))
 
-  public privateRoute = errorHandler(async (_req, _res) => {
+  public privateRoute = errorHandler(async (req: Request, _res) => {
     return [
       {id: 1, name: 'node'},
       {id: 2, name: 'JS'},
       {id: 3, name: 'TS'},
-      {id: 4, name: 'mongo'}
+      {id: 4, userId: req.userId},
     ]
   })
 
-  public generateRefreshToken = errorHandler(async (req, res) => {
-    const expiresIn = dayjs().add(15, 'days').unix()
+  public generateAccessToken = errorHandler(async (req: RequestWithBody<{refreshToken: string}>, res) => {
+    const { refreshToken } = req.body
 
-    const refreshTokenInstance = new RefreshTokenModel({
-      userId: 1,
-      expiresIn,
-    })
+    const refreshTokenInstance = await RefreshTokenModel.findById(refreshToken)
+
+    if(!refreshTokenInstance) throw new HttpError(401, 'Refresh token invalid')
+
+    const refreshTokenExpired = dayjs().isAfter(dayjs.unix(refreshTokenInstance.expiresIn))
+
+    if (refreshTokenExpired) {
+      await RefreshTokenModel.findByIdAndDelete(refreshTokenInstance._id)
+      throw new HttpError(401, 'Refresh token invalid')
+    }
+
+    const accessToken = createAccessToken(refreshTokenInstance.user)
+
+    return {
+      accessToken
+    }
+
   })
 
   private async verifyPassword (hasedPassword: string, rawPassword: string) {
